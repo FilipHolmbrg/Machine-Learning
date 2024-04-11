@@ -1,8 +1,11 @@
 import cv2
-import joblib
+# import joblib
+# from opencv_python_headless import cv2
 import numpy as np
 import streamlit as st
 from sklearn.datasets import fetch_openml
+from sklearn.ensemble import RandomForestClassifier
+
 
 #--------- Defining functions -----------------
 
@@ -87,36 +90,43 @@ def process_image(my_image):
 
     my_thick_img_transformed = my_thick_img.flatten()/np.max(my_thick_img)
 
-    st.title("How the computer visions the image")
+    current_model = build_model()
+
+    st.title("How the computer envisions the image")
     st.image(img_resized, channels="RGB", use_column_width=True)
-    st.title(f"Number predicted: {my_model.predict(img_resized.flatten().reshape(1,-1))[0]}")
+    st.title(f"Number predicted: {current_model.predict(img_resized.flatten().reshape(1,-1))[0]}")
+
+    current_model = []
 
 def crop_image(image, x, y, w, h):
     return image[y:y+h, x:x+w]
 
 #####---------- building model ----------
-# my_model = joblib.load(r'C:\Users\Elin\Desktop\DS23\Machine Learning\Kunskapskontroll 2\model.pkl')
-mnist = fetch_openml('mnist_784', version=1, cache=True, as_frame=False)
-X = mnist["data"]
-y = mnist["target"].astype(np.uint8)
+def build_model():
+    # my_model = joblib.load(r'C:\Users\Elin\Desktop\DS23\Machine Learning\Kunskapskontroll 2\model.pkl')
+    mnist = fetch_openml('mnist_784', version=1, cache=True, as_frame=False)
+    X = mnist["data"]
+    y = mnist["target"].astype(np.uint8)
 
-# Looping through MNIST data to put digit in top right corner
-X_new = []
+    # Looping through MNIST data to put digit in top right corner
+    X_new = []
 
-for item in X:
-    #     print(len(item))
-    new_item = remove_dead_space(item, True)
-    X_new.append(remove_dead_space(new_item, False))
+    for item in X:
+        #     print(len(item))
+        new_item = remove_dead_space(item, True)[0]
+        X_new.append(remove_dead_space(new_item, False)[0])
 
-# Normalize MNIST data
-X_new = np.array(X_new)
-X_new = X_new.reshape(-1,784)
-X_new = X_new / 255 #highest datapoint is always 254-255 in MNIST.
+    # Normalize MNIST data
+    X_new = np.array(X_new)
+    X_new = X_new.reshape(-1,784)
+    X_new = X_new / 255 #highest datapoint is always 254-255 in MNIST.
 
-random_forest_clf = RandomForestClassifier(n_jobs=-1, random_state=42)
-random_forest_clf.fit(X_new, y)
+    random_forest_clf = RandomForestClassifier(n_jobs=-1, random_state=42)
+    random_forest_clf.fit(X_new, y)
 
-my_model = random_forest_clf
+    my_model = random_forest_clf
+
+    return my_model
 
 #####---------- building app ----------
 
@@ -162,6 +172,7 @@ if my_img is not None:
 
 
     if st.button("Use image and predict value"):
+        st.subheader("Building model from MNIST data from scratch. Please wait, this may take a minute..")
         process_image(cropped_image)
 
 
