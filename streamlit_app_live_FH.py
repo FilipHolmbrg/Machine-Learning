@@ -130,7 +130,7 @@ def build_model():
 
 #####---------- building app ----------
 
-st.title("Take a photo")
+st.title("Take a photo of a handwritten digit")
 my_img = st.camera_input("")
 
 if my_img is not None:
