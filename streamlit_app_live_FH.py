@@ -5,6 +5,9 @@ import numpy as np
 import streamlit as st
 from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestClassifier
+from io import BytesIO
+import requests
+from PIL import Image
 
 
 #--------- Defining functions -----------------
@@ -32,6 +35,7 @@ def remove_dead_space(my_matrix, control):
 
     empty_matrix = np.array(empty_matrix)
     diff = 28 - empty_matrix.shape[0]
+
     zeros = np.zeros((diff, empty_matrix.shape[1]))
 
     if control == True:
@@ -128,9 +132,20 @@ def build_model():
 
     return my_model
 
+# Function to fetch image from GitHub
+def get_image_from_github(url):
+    response = requests.get(url)
+    img = Image.open(BytesIO(response.content))
+    return img
+
 #####---------- building app ----------
 
 st.title("Take a photo of a handwritten digit")
+
+github_url_1 = "https://raw.githubusercontent.com/FilipHolmbrg/Machine-Learning/main/example_screenshot.jpg"
+# Display the image
+image = get_image_from_github(github_url_1)
+st.image(image, caption="Example image showing how thick the digit needs to be.")
 my_img = st.camera_input("")
 
 if my_img is not None:
@@ -167,7 +182,14 @@ if my_img is not None:
     cv2.line(cropped_image, (0, line_y[1]), (cropped_image.shape[1], line_y[1]), line_color, line_thickness)
 
     # Display the image with the horizontal line
+    st.write('Captured image:')
     st.image(cropped_image, channels="RGB", use_column_width=True)
+
+    github_url_2 = "https://raw.githubusercontent.com/FilipHolmbrg/Machine-Learning/main/example_image.png"
+    # Display the image
+    image = get_image_from_github(github_url_2)
+    st.write("Example image:")
+    st.image(image, caption='"Example of image that stays off the above/below lines."')
 
 
 
